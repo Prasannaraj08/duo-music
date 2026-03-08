@@ -1154,17 +1154,14 @@ body {
 
 /* ─── Now Playing View ───────────────────────────────────────────────────── */
 .now-playing-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #1f1f1f 0%, #000000 100%);
-  z-index: 100;
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(150deg, #1a1a2e 0%, #16213e 40%, #0f0f0f 100%);
+  z-index: 150;
   display: flex;
   flex-direction: column;
   padding: 40px;
-  animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: slideUp 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
   overflow: hidden;
 }
 
@@ -1218,163 +1215,327 @@ body {
 .np-left {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
+}
+
+.np-cover-wrapper {
+  width: 100%;
+  margin-bottom: 28px;
 }
 
 .np-cover {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 12px;
+  border-radius: 16px;
   object-fit: cover;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
-  margin-bottom: 32px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.np-cover:hover {
+  transform: scale(1.02);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
 }
 
 .np-title {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 800;
   margin-bottom: 8px;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  color: white;
 }
 
 .np-artist {
-  font-size: 18px;
+  font-size: 17px;
   color: var(--text-secondary);
   font-weight: 500;
 }
 
 /* Center Section (Lyrics) */
 .np-center {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  padding: 32px;
+  padding: 28px 32px;
   min-height: 0;
+  overflow: hidden;
+}
+
+.np-lyrics-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
 .np-lyrics-container {
   flex: 1;
   overflow-y: auto;
-  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-  padding: 40px 0;
-}
-
-.np-lyrics-text {
-  font-size: 28px;
-  line-height: 1.6;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.np-lyrics-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: 20px;
-  color: var(--text-secondary);
-  font-weight: 600;
+  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  padding: 40px 8px;
+  scroll-behavior: smooth;
 }
 
 .np-lyrics-container::-webkit-scrollbar {
   display: none;
 }
 
+.np-lyrics-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Lyric line — default dimmed state (upcoming lines) */
+.np-lyric-line {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.25);
+  transition: color 0.5s ease, transform 0.4s ease, font-size 0.3s ease;
+  cursor: default;
+  padding: 3px 0;
+  border-radius: 4px;
+}
+
+/* Active (currently playing) line — bright white + glow */
+.np-lyric-line.active {
+  color: #ffffff;
+  font-size: 26px;
+  transform: translateX(10px);
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 60px rgba(255, 255, 255, 0.35);
+}
+
+/* Passed lines — even more dim */
+.np-lyric-line.passed {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+.np-lyrics-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  font-size: 18px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Loading spinner dot */
+.np-lyrics-loading-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--spotify-green);
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+
 /* Right Section */
 .np-right {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.np-right::-webkit-scrollbar {
+  display: none;
 }
 
 .np-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
 }
 
 .np-card h3 {
-  font-size: 14px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   color: var(--text-secondary);
   margin-bottom: 16px;
+  font-weight: 700;
 }
 
 .np-queue {
   flex: 1;
   min-height: 0;
-  overflow-y: hidden;
+  overflow: hidden;
 }
 
 .np-queue-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
   overflow-y: auto;
-  flex: 1;
-  padding-right: 8px;
+  max-height: 380px;
+  padding-right: 4px;
 }
 
 .np-queue-list::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .np-queue-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
 }
 
 .np-queue-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
 }
 
 .np-queue-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.np-queue-item:hover .np-queue-play-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .np-queue-item img {
-  width: 48px;
-  height: 48px;
-  border-radius: 4px;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
   object-fit: cover;
+  flex-shrink: 0;
+}
+
+.np-queue-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.np-queue-play-icon {
+  color: var(--spotify-green);
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .np-q-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .np-q-artist {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .np-queue-empty {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Queue section labels (QUEUE / FROM PLAYLIST) */
+.np-queue-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.np-queue-badge {
+  background: var(--spotify-green);
+  color: #000;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* User-queued items: green left border to show priority */
+.np-queue-item--user {
+  border-left: 2px solid var(--spotify-green);
+  padding-left: 8px;
+  margin-left: -2px;
+}
+
+/* About Artist card */
+.np-about-artist {
+  flex-shrink: 0;
+}
+
+.np-artist-avatar {
+  margin-bottom: 14px;
+}
+
+.np-artist-avatar-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .np-about-artist .np-artist-name {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   margin-bottom: 8px;
+  color: white;
 }
 
 .np-artist-desc {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.np-artist-desc strong {
+  color: rgba(255, 255, 255, 0.8);
 }

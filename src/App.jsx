@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Home, Search, Library, Plus, ArrowRight, Play, Pause,
   SkipBack, SkipForward, Repeat, Shuffle, Mic2, ListMusic,
@@ -892,78 +892,189 @@ const Player = ({ isPlaying, setIsPlaying, currentTrack, currentTime, onSeek, vo
 };
 
 // ─── Now Playing View ─────────────────────────────────────────────────────────
-const NowPlayingView = ({ currentTrack, queue, handlePlay, onClose }) => {
-  const [lyrics, setLyrics] = useState(null);
+const NowPlayingView = ({ currentTrack, currentTime, userQueue, contextQueue, handlePlay, onPlayFromQueue, onClose }) => {
+  const [rawLyrics, setRawLyrics] = useState(null);
   const [loadingLyrics, setLoadingLyrics] = useState(true);
+  const lyricsContainerRef = useRef(null);
 
   useEffect(() => {
     setLoadingLyrics(true);
-    setLyrics(null);
+    setRawLyrics(null);
     fetch(`https://jiosaavn-api-privatecvc2.vercel.app/lyrics?id=${currentTrack.id}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data && data.data.lyrics) {
-          setLyrics(data.data.lyrics);
+          setRawLyrics(data.data.lyrics);
         }
       })
       .catch(err => console.error('Lyrics fetch error:', err))
       .finally(() => setLoadingLyrics(false));
   }, [currentTrack.id]);
 
-  const playableQueue = queue.filter(s => s.audio);
-  const currentIdx = playableQueue.findIndex(s => s.id === currentTrack.id);
-  const upcomingSongs = currentIdx >= 0 ? playableQueue.slice(currentIdx + 1, currentIdx + 6) : playableQueue.slice(0, 5);
+  // Parse raw HTML lyrics into line-by-line array with proportional timestamps
+  const lyricsLines = useMemo(() => {
+    if (!rawLyrics) return [];
+    const stripped = rawLyrics
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&nbsp;/g, ' ');
+    const lines = stripped.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const duration = currentTrack.duration || 240;
+    return lines.map((text, i) => ({
+      text,
+      startTime: (i / lines.length) * duration,
+      endTime: ((i + 1) / lines.length) * duration,
+    }));
+  }, [rawLyrics, currentTrack.id, currentTrack.duration]);
+
+  // Determine active lyric line index from playback time
+  const activeIndex = useMemo(() => {
+    if (!lyricsLines.length) return -1;
+    let idx = -1;
+    for (let i = 0; i < lyricsLines.length; i++) {
+      if (currentTime >= lyricsLines[i].startTime) idx = i;
+      else break;
+    }
+    return idx;
+  }, [currentTime, lyricsLines]);
+
+  // Smooth center-scroll: keep active line vertically centered in container
+  useEffect(() => {
+    if (!lyricsContainerRef.current || activeIndex < 0) return;
+    const container = lyricsContainerRef.current;
+    const lineEls = container.querySelectorAll('.np-lyric-line');
+    const activeLine = lineEls[activeIndex];
+    if (!activeLine) return;
+    const targetTop = activeLine.offsetTop - container.clientHeight / 2 + activeLine.clientHeight / 2;
+    container.scrollTo({ top: targetTop, behavior: 'smooth' });
+  }, [activeIndex]);
+
+  // ── Queue display ──
+  // Priority 1: explicit user queue
+  const upNext = (userQueue || []).filter(s => s.audio).slice(0, 8);
+  // Priority 2: upcoming songs in context (playlist/album)
+  const playableCtx = (contextQueue || []).filter(s => s.audio);
+  const ctxIdx = playableCtx.findIndex(s => s.id === currentTrack.id);
+  const fromPlaylist = ctxIdx >= 0 ? playableCtx.slice(ctxIdx + 1, ctxIdx + 7) : playableCtx.slice(0, 6);
 
   return (
     <div className="now-playing-overlay">
       <button className="close-now-playing-btn" onClick={onClose}><ChevronDown size={32} /></button>
+
       <div className="now-playing-grid">
-        {/* LEFT SECTION */}
+        {/* ── LEFT: Album art + song info ── */}
         <div className="np-left">
-          <img src={currentTrack.image} alt={currentTrack.title} className="np-cover" />
+          <div className="np-cover-wrapper">
+            <img src={currentTrack.image} alt={currentTrack.title} className="np-cover" />
+          </div>
           <h1 className="np-title">{currentTrack.title}</h1>
           <h2 className="np-artist">{currentTrack.artist}</h2>
         </div>
 
-        {/* CENTER SECTION */}
+        {/* ── CENTER: Scrollable synced lyrics ── */}
         <div className="np-center">
-          <div className="np-lyrics-container">
+          <div className="np-lyrics-header">Lyrics</div>
+          <div className="np-lyrics-container" ref={lyricsContainerRef}>
             {loadingLyrics ? (
-              <div className="np-lyrics-placeholder">Loading lyrics...</div>
-            ) : lyrics ? (
-              <div className="np-lyrics-text" dangerouslySetInnerHTML={{ __html: lyrics.replace(/\n/g, '<br/>') }} />
+              <div className="np-lyrics-placeholder">
+                <span className="np-lyrics-loading-dot" />
+                Loading lyrics...
+              </div>
+            ) : lyricsLines.length > 0 ? (
+              <div className="np-lyrics-lines">
+                {lyricsLines.map((line, i) => {
+                  const isActive = i === activeIndex;
+                  const isPassed = i < activeIndex;
+                  return (
+                    <div
+                      key={i}
+                      className={`np-lyric-line${isActive ? ' active' : ''}${isPassed ? ' passed' : ''}`}
+                    >
+                      {line.text}
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <div className="np-lyrics-placeholder">Lyrics not available for this song</div>
             )}
           </div>
         </div>
 
-        {/* RIGHT SECTION */}
+        {/* ── RIGHT: Queue + About Artist ── */}
         <div className="np-right">
           <div className="np-card np-queue">
-            <h3>Next in Queue</h3>
-            {upcomingSongs.length > 0 ? (
-              <div className="np-queue-list">
-                {upcomingSongs.map(song => (
-                  <div key={`npq-${song.id}`} className="np-queue-item" onClick={() => { handlePlay(song); onClose(); }}>
-                    <img src={song.image} alt={song.title} />
-                    <div className="np-queue-info">
-                      <div className="np-q-title">{song.title}</div>
-                      <div className="np-q-artist">{song.artist}</div>
+            <h3>Up Next</h3>
+
+            {/* ── Section 1: Explicit user queue (Priority 1) ── */}
+            {upNext.length > 0 && (
+              <>
+                <div className="np-queue-section-label">
+                  <span className="np-queue-badge">QUEUE</span>
+                </div>
+                <div className="np-queue-list">
+                  {upNext.map(song => (
+                    <div
+                      key={`uq-${song.id}`}
+                      className="np-queue-item np-queue-item--user"
+                      onClick={() => onPlayFromQueue(song)}
+                      title={`Play: ${song.title}`}
+                    >
+                      <img src={song.image} alt={song.title} />
+                      <div className="np-queue-info">
+                        <div className="np-q-title">{song.title}</div>
+                        <div className="np-q-artist">{song.artist}</div>
+                      </div>
+                      <div className="np-queue-play-icon"><Play size={14} fill="currentColor" /></div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="np-queue-empty" style={{ color: 'var(--text-secondary)' }}>No upcoming songs</div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* ── Section 2: From playlist/album (Priority 2) ── */}
+            {fromPlaylist.length > 0 && (
+              <>
+                <div className="np-queue-section-label" style={{ marginTop: upNext.length > 0 ? '14px' : '0' }}>
+                  <span>FROM PLAYLIST</span>
+                </div>
+                <div className="np-queue-list">
+                  {fromPlaylist.map(song => (
+                    <div
+                      key={`ctx-${song.id}`}
+                      className="np-queue-item"
+                      onClick={() => handlePlay(song)}
+                      title={`Play: ${song.title}`}
+                    >
+                      <img src={song.image} alt={song.title} />
+                      <div className="np-queue-info">
+                        <div className="np-q-title">{song.title}</div>
+                        <div className="np-q-artist">{song.artist}</div>
+                      </div>
+                      <div className="np-queue-play-icon"><Play size={14} fill="currentColor" /></div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {upNext.length === 0 && fromPlaylist.length === 0 && (
+              <div className="np-queue-empty">No upcoming songs — will auto-play recommendations</div>
             )}
           </div>
 
+          {/* About Artist card */}
           <div className="np-card np-about-artist">
             <h3>About the Artist</h3>
+            <div className="np-artist-avatar">
+              {currentTrack.image && (
+                <img src={currentTrack.image} alt={currentTrack.artist} className="np-artist-avatar-img" />
+              )}
+            </div>
             <div className="np-artist-name">{currentTrack.artist}</div>
-            <div className="np-artist-desc" style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.5 }}>
-              Listen to more from {currentTrack.artist} and explore their top hits and latest releases.
+            <div className="np-artist-desc">
+              Listen to more from <strong>{currentTrack.artist}</strong> and explore their top hits and latest releases.
             </div>
           </div>
         </div>
@@ -981,7 +1092,8 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [volume, setVolume] = useState(0.7);
   const [isShuffle, setIsShuffle] = useState(false);
-  const [queue, setQueue] = useState(recentMusic);
+  const [contextQueue, setContextQueue] = useState(recentMusic); // playlist/album songs (Priority 2)
+  const [userQueue, setUserQueue] = useState([]);                 // explicit user-added songs (Priority 1)
   const [view, setView] = useState(null);
   const [likedSongs, setLikedSongs] = useState(() => {
     try { return JSON.parse(localStorage.getItem('likedSongs') || '[]'); } catch { return []; }
@@ -1035,9 +1147,9 @@ const App = () => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  const handlePlay = useCallback((track, contextQueue = null) => {
-    if (contextQueue) {
-      setQueue(contextQueue);
+  const handlePlay = useCallback((track, newContextSongs = null) => {
+    if (newContextSongs) {
+      setContextQueue(newContextSongs);
     }
     if (currentTrack.id === track.id) {
       setIsPlaying(prev => !prev);
@@ -1045,7 +1157,6 @@ const App = () => {
       setCurrentTrack(track);
       setCurrentTime(0);
       setIsPlaying(true);
-      // Track recently played (max 6, no duplicates)
       setRecentlyPlayed(prev => {
         const filtered = prev.filter(s => s.id !== track.id);
         return [track, ...filtered].slice(0, 6);
@@ -1060,29 +1171,41 @@ const App = () => {
     }
   };
 
-  const handleSkipNext = () => {
-    if (!queue.length) return;
-    const playableSongs = queue.filter(s => s.audio);
-    if (!playableSongs.length) return;
-    if (isShuffle) {
-      // Exclude current track to avoid immediate repeat
-      const others = playableSongs.filter(s => s.id !== currentTrack.id);
-      const pool = others.length > 0 ? others : playableSongs;
-      const randomIdx = Math.floor(Math.random() * pool.length);
-      handlePlay(pool[randomIdx]);
-    } else {
-      const idx = playableSongs.findIndex(s => s.id === currentTrack.id);
-      const next = playableSongs[(idx + 1) % playableSongs.length];
-      handlePlay(next);
+  const handleSkipNext = useCallback(async () => {
+    // ── Priority 1: explicit user queue ──
+    if (userQueue.length > 0) {
+      const [next, ...rest] = userQueue;
+      setUserQueue(rest);
+      if (next?.audio) { handlePlay(next); return; }
     }
-  };
+    // ── Priority 2: contextQueue (current playlist / album) ──
+    const playable = contextQueue.filter(s => s.audio);
+    if (playable.length > 0) {
+      if (isShuffle) {
+        const others = playable.filter(s => s.id !== currentTrack.id);
+        const pool = others.length > 0 ? others : playable;
+        handlePlay(pool[Math.floor(Math.random() * pool.length)]);
+        return;
+      }
+      const idx = playable.findIndex(s => s.id === currentTrack.id);
+      if (idx >= 0 && idx < playable.length - 1) {
+        handlePlay(playable[idx + 1]);
+        return;
+      }
+    }
+    // ── Priority 3: auto-recommendations ──
+    try {
+      const recs = await fetchSongsByQuery(currentTrack.artist, 12);
+      const fresh = recs.filter(s => s.audio && s.id !== currentTrack.id);
+      if (fresh.length > 0) { setContextQueue(fresh); handlePlay(fresh[0]); }
+    } catch (e) { console.error('Auto-rec error', e); }
+  }, [userQueue, contextQueue, currentTrack, isShuffle, handlePlay]);
 
   const handleSkipPrev = () => {
-    if (!queue.length) return;
-    const playableSongs = queue.filter(s => s.audio);
-    if (!playableSongs.length) return;
-    const idx = playableSongs.findIndex(s => s.id === currentTrack.id);
-    const prev = playableSongs[(idx - 1 + playableSongs.length) % playableSongs.length];
+    const playable = contextQueue.filter(s => s.audio);
+    if (!playable.length) return;
+    const idx = playable.findIndex(s => s.id === currentTrack.id);
+    const prev = playable[(idx - 1 + playable.length) % playable.length];
     handlePlay(prev);
   };
 
@@ -1104,7 +1227,7 @@ const App = () => {
   const commonViewProps = {
     currentTrack, handlePlay, isPlaying,
     isShuffle, onToggleShuffle: () => setIsShuffle(s => !s),
-    setQueue, likedSongs, onToggleLike: handleToggleLike
+    setQueue: setContextQueue, likedSongs, onToggleLike: handleToggleLike
   };
 
   return (
@@ -1151,7 +1274,7 @@ const App = () => {
             likedSongs={likedSongs}
             onToggleLike={handleToggleLike}
             recentlyPlayed={recentlyPlayed}
-            onAddToQueue={(song) => setQueue(prev => {
+            onAddToQueue={(song) => setUserQueue(prev => {
               if (prev.some(s => s.id === song.id)) return prev;
               return [...prev, song];
             })}
@@ -1162,8 +1285,14 @@ const App = () => {
       {isNowPlayingOpen && (
         <NowPlayingView
           currentTrack={currentTrack}
-          queue={queue}
+          currentTime={currentTime}
+          userQueue={userQueue}
+          contextQueue={contextQueue}
           handlePlay={handlePlay}
+          onPlayFromQueue={(song) => {
+            setUserQueue(prev => prev.filter(s => s.id !== song.id));
+            handlePlay(song);
+          }}
           onClose={() => setIsNowPlayingOpen(false)}
         />
       )}
