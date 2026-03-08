@@ -202,7 +202,7 @@ const ArtistView = ({ artist, onBack, currentTrack, handlePlay, isPlaying, isShu
       <div className="artist-hero">
         <button className="back-btn" onClick={onBack}><ChevronLeft size={20} /></button>
         <div className="artist-hero-content">
-          <img src={artist.image} alt={artist.name} className="artist-hero-img" />
+          <img src={artist.image} alt={artist.name} className="artist-hero-img" referrerPolicy="no-referrer" />
           <div className="artist-hero-info">
             <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'white', opacity: 0.7 }}>Artist</span>
             <h1 className="album-hero-title" style={{ fontSize: '52px' }}>{artist.name}</h1>
@@ -232,7 +232,7 @@ const ArtistView = ({ artist, onBack, currentTrack, handlePlay, isPlaying, isShu
 };
 
 // ─── Playlist View ────────────────────────────────────────────────────────────
-const PlaylistView = ({ playlist, onBack, currentTrack, handlePlay, isPlaying, isShuffle, onToggleShuffle, setQueue, likedSongs, onToggleLike }) => {
+const PlaylistView = ({ playlist, onBack, currentTrack, handlePlay, isPlaying, isShuffle, onToggleShuffle, setQueue, likedSongs, onToggleLike, onAddToQueue }) => {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -323,7 +323,7 @@ const PlaylistView = ({ playlist, onBack, currentTrack, handlePlay, isPlaying, i
         </div>
       </div>
       <div className="album-tracklist">
-        <TrackList songs={songs} currentTrack={currentTrack} isPlaying={isPlaying} handlePlay={handlePlay} loading={loading} likedSongs={likedSongs} onToggleLike={onToggleLike} />
+        <TrackList songs={songs} currentTrack={currentTrack} isPlaying={isPlaying} handlePlay={handlePlay} loading={loading} likedSongs={likedSongs} onToggleLike={onToggleLike} onAddToQueue={onAddToQueue} />
       </div>
     </div>
   );
@@ -331,11 +331,11 @@ const PlaylistView = ({ playlist, onBack, currentTrack, handlePlay, isPlaying, i
 
 // ─── Create Playlist Modal ────────────────────────────────────────────────────
 const TOP_TAMIL_DIRECTORS = [
-  { id: 204, name: 'Anirudh Ravichander', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Anirudh_Ravichander_in_2023.jpg/440px-Anirudh_Ravichander_in_2023.jpg', searchQuery: 'Anirudh Ravichander Tamil' },
-  { id: 205, name: 'AR Rahman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A._R._Rahman_%282023%2C_London%29.jpg/440px-A._R._Rahman_%282023%2C_London%29.jpg', searchQuery: 'AR Rahman Tamil' },
-  { id: 206, name: 'Yuvan Shankar Raja', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Yuvan_Shankar_Raja.jpg/440px-Yuvan_Shankar_Raja.jpg', searchQuery: 'Yuvan Shankar Raja Tamil' },
-  { id: 209, name: 'D. Imman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/D._Imman_%28Cropped%29.jpg/440px-D._Imman_%28Cropped%29.jpg', searchQuery: 'D Imman Tamil' },
-  { id: 210, name: 'Harris Jayaraj', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Harris_Jayaraj.jpg/440px-Harris_Jayaraj.jpg', searchQuery: 'Harris Jayaraj Tamil' },
+  { id: 204, name: 'Anirudh Ravichander', image: 'https://c.saavncdn.com/artists/Anirudh_Ravichander_003_20260121134149_500x500.jpg', searchQuery: 'Anirudh Ravichander Tamil' },
+  { id: 205, name: 'AR Rahman', image: 'https://upload.wikimedia.org/wikipedia/commons/0/07/A._R._Rahman.jpg', searchQuery: 'AR Rahman Tamil' },
+  { id: 206, name: 'Yuvan Shankar Raja', image: 'https://c.saavncdn.com/artists/Yuvan_Shankar_Raja_002_20180802174245_500x500.jpg', searchQuery: 'Yuvan Shankar Raja Tamil' },
+  { id: 209, name: 'D. Imman', image: 'https://upload.wikimedia.org/wikipedia/commons/9/9c/Imman_composer.jpg', searchQuery: 'D Imman Tamil' },
+  { id: 210, name: 'Harris Jayaraj', image: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Harris_Jayaraj.jpg', searchQuery: 'Harris Jayaraj Tamil' },
 ];
 
 const CreatePlaylistModal = ({ onClose, onCreate, onArtistClick }) => {
@@ -539,7 +539,7 @@ const Sidebar = ({ activeTab, setActiveTab, onPlaylistClick, onArtistClick, like
             <p style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', padding: '4px 8px 8px' }}>Tamil Directors</p>
             {TOP_TAMIL_DIRECTORS.map(dir => (
               <div key={dir.id} className="playlist-item" onClick={() => onArtistClick(dir)}>
-                <img src={dir.image} alt={dir.name} className="playlist-img" style={{ objectFit: 'cover', borderRadius: '50%' }} />
+                <img src={dir.image} alt={dir.name} className="playlist-img" style={{ objectFit: 'cover', borderRadius: '50%' }} referrerPolicy="no-referrer" />
                 <div className="playlist-info">
                   <span className="playlist-title">{dir.name}</span>
                   <span className="playlist-desc">Artist</span>
@@ -800,7 +800,7 @@ const MainContent = ({
               {artists.map((artist) => (
                 <div key={`artist-${artist.id}`} className="card artist" onClick={() => onArtistClick(artist)}>
                   <div className="card-img-container">
-                    <img src={artist.image} alt={artist.name} className="card-img" />
+                    <img src={artist.image} alt={artist.name} className="card-img" referrerPolicy="no-referrer" />
                     <button className="play-btn" onClick={e => { e.stopPropagation(); onArtistClick(artist); }}>
                       <Play fill="black" size={24} color="black" style={{ marginLeft: '4px' }} />
                     </button>
@@ -1087,7 +1087,7 @@ const NowPlayingView = ({ currentTrack, currentTime, userQueue, contextQueue, ha
 const App = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(recentMusic[0]);
+  const [currentTrack, setCurrentTrack] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [activeTab, setActiveTab] = useState('home');
   const [volume, setVolume] = useState(0.7);
@@ -1136,6 +1136,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.play().catch(e => console.log('Audio play error', e));
     } else {
@@ -1151,7 +1152,7 @@ const App = () => {
     if (newContextSongs) {
       setContextQueue(newContextSongs);
     }
-    if (currentTrack.id === track.id) {
+    if (currentTrack && currentTrack.id === track.id) {
       setIsPlaying(prev => !prev);
     } else {
       setCurrentTrack(track);
@@ -1224,20 +1225,30 @@ const App = () => {
     setView(null);
   };
 
+  const handleAddToQueue = useCallback((song) => {
+    setUserQueue(prev => {
+      if (prev.some(s => s.id === song.id)) return prev;
+      return [...prev, song];
+    });
+  }, []);
+
   const commonViewProps = {
     currentTrack, handlePlay, isPlaying,
     isShuffle, onToggleShuffle: () => setIsShuffle(s => !s),
-    setQueue: setContextQueue, likedSongs, onToggleLike: handleToggleLike
+    setQueue: setContextQueue, likedSongs, onToggleLike: handleToggleLike,
+    onAddToQueue: handleAddToQueue
   };
 
   return (
     <>
-      <audio
-        ref={audioRef}
-        src={currentTrack.audio}
-        onTimeUpdate={e => setCurrentTime(e.target.currentTime)}
-        onEnded={handleSongEnd}
-      />
+      {currentTrack && (
+        <audio
+          ref={audioRef}
+          src={currentTrack.audio}
+          onTimeUpdate={e => setCurrentTime(e.target.currentTime)}
+          onEnded={handleSongEnd}
+        />
+      )}
       <div className="app-container" onScroll={(e) => setIsScrolled(e.target.scrollTop > 0)}>
         <Sidebar
           activeTab={activeTab}
@@ -1274,10 +1285,7 @@ const App = () => {
             likedSongs={likedSongs}
             onToggleLike={handleToggleLike}
             recentlyPlayed={recentlyPlayed}
-            onAddToQueue={(song) => setUserQueue(prev => {
-              if (prev.some(s => s.id === song.id)) return prev;
-              return [...prev, song];
-            })}
+            onAddToQueue={handleAddToQueue}
           />
         )}
       </div>
@@ -1297,20 +1305,22 @@ const App = () => {
         />
       )}
 
-      <Player
-        isPlaying={isPlaying}
-        setIsPlaying={setIsPlaying}
-        currentTrack={currentTrack}
-        currentTime={currentTime}
-        onSeek={handleSeek}
-        volume={volume}
-        onVolumeChange={setVolume}
-        onSkipNext={handleSkipNext}
-        onSkipPrev={handleSkipPrev}
-        isShuffle={isShuffle}
-        onToggleShuffle={() => setIsShuffle(s => !s)}
-        onToggleNowPlaying={() => setIsNowPlayingOpen(true)}
-      />
+      {currentTrack && (
+        <Player
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          currentTrack={currentTrack}
+          currentTime={currentTime}
+          onSeek={handleSeek}
+          volume={volume}
+          onVolumeChange={setVolume}
+          onSkipNext={handleSkipNext}
+          onSkipPrev={handleSkipPrev}
+          isShuffle={isShuffle}
+          onToggleShuffle={() => setIsShuffle(s => !s)}
+          onToggleNowPlaying={() => setIsNowPlayingOpen(true)}
+        />
+      )}
       {showCreatePlaylist && (
         <CreatePlaylistModal
           onClose={() => setShowCreatePlaylist(false)}
