@@ -331,11 +331,11 @@ const PlaylistView = ({ playlist, onBack, currentTrack, handlePlay, isPlaying, i
 
 // ─── Create Playlist Modal ────────────────────────────────────────────────────
 const TOP_TAMIL_DIRECTORS = [
-  { id: 204, name: 'Anirudh Ravichander', image: 'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/1/18/Anirudh_Ravichander_in_2023.jpg/440px-Anirudh_Ravichander_in_2023.jpg&w=300&h=300&fit=cover', searchQuery: 'Anirudh Ravichander Tamil' },
-  { id: 205, name: 'AR Rahman', image: 'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A._R._Rahman_%282023%2C_London%29.jpg/440px-A._R._Rahman_%282023%2C_London%29.jpg&w=300&h=300&fit=cover', searchQuery: 'AR Rahman Tamil' },
-  { id: 206, name: 'Yuvan Shankar Raja', image: 'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Yuvan_Shankar_Raja.jpg/440px-Yuvan_Shankar_Raja.jpg&w=300&h=300&fit=cover', searchQuery: 'Yuvan Shankar Raja Tamil' },
-  { id: 209, name: 'D. Imman', image: 'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/4/44/D._Imman_%28Cropped%29.jpg/440px-D._Imman_%28Cropped%29.jpg&w=80&h=80&fit=cover', searchQuery: 'D Imman Tamil' },
-  { id: 210, name: 'Harris Jayaraj', image: 'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Harris_Jayaraj.jpg/440px-Harris_Jayaraj.jpg&w=80&h=80&fit=cover', searchQuery: 'Harris Jayaraj Tamil' },
+  { id: 204, name: 'Anirudh Ravichander', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Anirudh_Ravichander_in_2023.jpg/440px-Anirudh_Ravichander_in_2023.jpg', searchQuery: 'Anirudh Ravichander Tamil' },
+  { id: 205, name: 'AR Rahman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A._R._Rahman_%282023%2C_London%29.jpg/440px-A._R._Rahman_%282023%2C_London%29.jpg', searchQuery: 'AR Rahman Tamil' },
+  { id: 206, name: 'Yuvan Shankar Raja', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Yuvan_Shankar_Raja.jpg/440px-Yuvan_Shankar_Raja.jpg', searchQuery: 'Yuvan Shankar Raja Tamil' },
+  { id: 209, name: 'D. Imman', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/D._Imman_%28Cropped%29.jpg/440px-D._Imman_%28Cropped%29.jpg', searchQuery: 'D Imman Tamil' },
+  { id: 210, name: 'Harris Jayaraj', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Harris_Jayaraj.jpg/440px-Harris_Jayaraj.jpg', searchQuery: 'Harris Jayaraj Tamil' },
 ];
 
 const CreatePlaylistModal = ({ onClose, onCreate, onArtistClick }) => {
@@ -1156,15 +1156,16 @@ const App = () => {
             })}
           />
         )}
-        {isNowPlayingOpen && (
-          <NowPlayingView
-            currentTrack={currentTrack}
-            queue={queue}
-            handlePlay={handlePlay}
-            onClose={() => setIsNowPlayingOpen(false)}
-          />
-        )}
       </div>
+
+      {isNowPlayingOpen && (
+        <NowPlayingView
+          currentTrack={currentTrack}
+          queue={queue}
+          handlePlay={handlePlay}
+          onClose={() => setIsNowPlayingOpen(false)}
+        />
+      )}
 
       <Player
         isPlaying={isPlaying}
