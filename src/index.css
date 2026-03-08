@@ -626,7 +626,7 @@ body {
 
 .track-row {
   display: grid;
-  grid-template-columns: 40px 1fr 80px;
+  grid-template-columns: 40px 1fr 110px;
   align-items: center;
   padding: 8px 16px;
   border-radius: 4px;
@@ -917,4 +917,237 @@ body {
 
 .active-control {
   color: var(--spotify-green) !important;
+}
+
+/* ─── Search Song Row Actions ────────────────────────────────────────────── */
+.search-song-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ─── Queue Button ─────────────────────────────────────────────────────────── */
+.queue-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  opacity: 0.8;
+  transition: color 0.2s, opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.search-song-row:hover .queue-btn,
+.track-row:hover .queue-btn {
+  opacity: 1;
+}
+
+.queue-btn:hover {
+  color: var(--spotify-green);
+  transform: scale(1.15);
+}
+
+/* ─── Queue Toast ─────────────────────────────────────────────────────────── */
+.queue-toast {
+  position: fixed;
+  bottom: 120px;
+  /* Above player */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  color: #000;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: toast-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ─── Like Button ─────────────────────────────────────────────────────────── */
+.like-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: color 0.2s, opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.track-item:hover .like-btn,
+.search-song-row:hover .like-btn,
+.like-btn[style*="color: rgb(29, 185, 84)"],
+.like-btn[style*="color: #1db954"] {
+  opacity: 1;
+}
+
+.like-btn:hover {
+  color: white;
+  transform: scale(1.15);
+}
+
+/* ─── Create Playlist Modal ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-box {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 28px;
+  width: 460px;
+  max-width: 95vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.modal-input {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal-input:focus {
+  border-color: var(--spotify-green);
+}
+
+.modal-search-wrap {
+  position: relative;
+}
+
+.modal-section-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  margin-top: 4px;
+}
+
+.modal-song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.modal-song-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.modal-song-row:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.modal-song-picked {
+  background-color: rgba(29, 185, 84, 0.1);
+}
+
+.modal-song-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.modal-song-title {
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-song-artist {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-create-btn {
+  background-color: var(--spotify-green);
+  color: black;
+  border: none;
+  border-radius: 24px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  align-self: center;
+  margin-top: 8px;
+  min-width: 160px;
+}
+
+.modal-create-btn:hover:not(:disabled) {
+  background-color: var(--spotify-green-hover);
+  transform: scale(1.03);
+}
+
+.modal-create-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
