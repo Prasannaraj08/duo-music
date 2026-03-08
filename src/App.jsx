@@ -78,7 +78,7 @@ const TrackList = ({ songs, currentTrack, isPlaying, handlePlay, loading, likedS
           <div
             key={song.id}
             className={`track-row track-item ${isActive ? 'track-active' : ''}`}
-            onClick={() => song.audio && handlePlay(song)}
+            onClick={() => song.audio && handlePlay(song, songs)}
             style={{ opacity: song.audio ? 1 : 0.45, cursor: song.audio ? 'pointer' : 'not-allowed' }}
           >
             <span className="track-num">
@@ -160,7 +160,7 @@ const AlbumView = ({ album, onBack, currentTrack, handlePlay, isPlaying, isShuff
           </div>
         </div>
         <div className="album-actions">
-          <button className="album-play-btn" onClick={() => songs.length > 0 && handlePlay(songs[0])}>
+          <button className="album-play-btn" onClick={() => songs.length > 0 && handlePlay(songs[0], songs)}>
             <Play fill="black" size={24} color="black" style={{ marginLeft: '3px' }} />
           </button>
           <button
@@ -209,7 +209,7 @@ const ArtistView = ({ artist, onBack, currentTrack, handlePlay, isPlaying, isShu
           </div>
         </div>
         <div className="album-actions">
-          <button className="album-play-btn" onClick={() => songs.length > 0 && handlePlay(songs[0])}>
+          <button className="album-play-btn" onClick={() => songs.length > 0 && handlePlay(songs[0], songs)}>
             <Play fill="black" size={24} color="black" style={{ marginLeft: '3px' }} />
           </button>
           <button
@@ -310,7 +310,7 @@ const PlaylistView = ({ playlist, onBack, currentTrack, handlePlay, isPlaying, i
           </div>
         </div>
         <div className="album-actions">
-          <button className="album-play-btn" onClick={() => songs.length > 0 && handlePlay(songs[0])}>
+          <button className="album-play-btn" onClick={() => songs.length > 0 && handlePlay(songs[0], songs)}>
             <Play fill="black" size={24} color="black" style={{ marginLeft: '3px' }} />
           </button>
           <button
@@ -679,7 +679,7 @@ const MainContent = ({
                           <div
                             key={`ss-${item.id}`}
                             className="search-song-row"
-                            onClick={() => item.audio && handlePlay(item)}
+                            onClick={() => item.audio && handlePlay(item, searchResults.songs)}
                             style={{ opacity: item.audio ? 1 : 0.5, cursor: item.audio ? 'pointer' : 'not-allowed' }}
                           >
                             <span className="search-song-num" style={{ color: isActive ? 'var(--spotify-green)' : 'var(--text-secondary)' }}>
@@ -953,7 +953,10 @@ const App = () => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  const handlePlay = useCallback((track) => {
+  const handlePlay = useCallback((track, contextQueue = null) => {
+    if (contextQueue) {
+      setQueue(contextQueue);
+    }
     if (currentTrack.id === track.id) {
       setIsPlaying(prev => !prev);
     } else {
