@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Home, Search, Library, Plus, ArrowRight, Play, Pause,
   SkipBack, SkipForward, Repeat, Shuffle, Mic2, ListMusic,
-  MonitorSpeaker, Volume2, VolumeX, Maximize2, ChevronLeft, Clock, Music, Disc3, Heart
+  MonitorSpeaker, Volume2, VolumeX, Maximize2, ChevronLeft, ChevronDown, Clock, Music, Disc3, Heart
 } from 'lucide-react';
 import { playlists, recentMusic, artists, browseCategories } from './data';
 import './index.css';
@@ -823,11 +823,11 @@ const MainContent = ({
 };
 
 // ─── Player ───────────────────────────────────────────────────────────────────
-const Player = ({ isPlaying, setIsPlaying, currentTrack, currentTime, onSeek, volume, onVolumeChange, onSkipNext, onSkipPrev, isShuffle, onToggleShuffle }) => {
+const Player = ({ isPlaying, setIsPlaying, currentTrack, currentTime, onSeek, volume, onVolumeChange, onSkipNext, onSkipPrev, isShuffle, onToggleShuffle, onToggleNowPlaying }) => {
   const isMuted = volume === 0;
   return (
     <div className="player">
-      <div className="player-left">
+      <div className="player-left" onClick={onToggleNowPlaying} style={{ cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 0.8} onMouseLeave={e => e.currentTarget.style.opacity = 1}>
         <img src={currentTrack.image} alt="Now Playing" className="now-playing-img" />
         <div className="now-playing-info">
           <span className="now-playing-title">{currentTrack.title}</span>
@@ -886,6 +886,87 @@ const Player = ({ isPlaying, setIsPlaying, currentTrack, currentTime, onSeek, vo
           </div>
         </div>
         <Maximize2 size={16} className="control-btn" />
+      </div>
+    </div>
+  );
+};
+
+// ─── Now Playing View ─────────────────────────────────────────────────────────
+const NowPlayingView = ({ currentTrack, queue, handlePlay, onClose }) => {
+  const [lyrics, setLyrics] = useState(null);
+  const [loadingLyrics, setLoadingLyrics] = useState(true);
+
+  useEffect(() => {
+    setLoadingLyrics(true);
+    setLyrics(null);
+    fetch(`https://jiosaavn-api-privatecvc2.vercel.app/lyrics?id=${currentTrack.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.data && data.data.lyrics) {
+          setLyrics(data.data.lyrics);
+        }
+      })
+      .catch(err => console.error('Lyrics fetch error:', err))
+      .finally(() => setLoadingLyrics(false));
+  }, [currentTrack.id]);
+
+  const playableQueue = queue.filter(s => s.audio);
+  const currentIdx = playableQueue.findIndex(s => s.id === currentTrack.id);
+  const upcomingSongs = currentIdx >= 0 ? playableQueue.slice(currentIdx + 1, currentIdx + 6) : playableQueue.slice(0, 5);
+
+  return (
+    <div className="now-playing-overlay">
+      <button className="close-now-playing-btn" onClick={onClose}><ChevronDown size={32} /></button>
+      <div className="now-playing-grid">
+        {/* LEFT SECTION */}
+        <div className="np-left">
+          <img src={currentTrack.image} alt={currentTrack.title} className="np-cover" />
+          <h1 className="np-title">{currentTrack.title}</h1>
+          <h2 className="np-artist">{currentTrack.artist}</h2>
+        </div>
+
+        {/* CENTER SECTION */}
+        <div className="np-center">
+          <div className="np-lyrics-container">
+            {loadingLyrics ? (
+              <div className="np-lyrics-placeholder">Loading lyrics...</div>
+            ) : lyrics ? (
+              <div className="np-lyrics-text" dangerouslySetInnerHTML={{ __html: lyrics.replace(/\n/g, '<br/>') }} />
+            ) : (
+              <div className="np-lyrics-placeholder">Lyrics not available for this song</div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT SECTION */}
+        <div className="np-right">
+          <div className="np-card np-queue">
+            <h3>Next in Queue</h3>
+            {upcomingSongs.length > 0 ? (
+              <div className="np-queue-list">
+                {upcomingSongs.map(song => (
+                  <div key={`npq-${song.id}`} className="np-queue-item" onClick={() => { handlePlay(song); onClose(); }}>
+                    <img src={song.image} alt={song.title} />
+                    <div className="np-queue-info">
+                      <div className="np-q-title">{song.title}</div>
+                      <div className="np-q-artist">{song.artist}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="np-queue-empty" style={{ color: 'var(--text-secondary)' }}>No upcoming songs</div>
+            )}
+          </div>
+
+          <div className="np-card np-about-artist">
+            <h3>About the Artist</h3>
+            <div className="np-artist-name">{currentTrack.artist}</div>
+            <div className="np-artist-desc" style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.5 }}>
+              Listen to more from {currentTrack.artist} and explore their top hits and latest releases.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1075,6 +1156,14 @@ const App = () => {
             })}
           />
         )}
+        {isNowPlayingOpen && (
+          <NowPlayingView
+            currentTrack={currentTrack}
+            queue={queue}
+            handlePlay={handlePlay}
+            onClose={() => setIsNowPlayingOpen(false)}
+          />
+        )}
       </div>
 
       <Player
@@ -1089,6 +1178,7 @@ const App = () => {
         onSkipPrev={handleSkipPrev}
         isShuffle={isShuffle}
         onToggleShuffle={() => setIsShuffle(s => !s)}
+        onToggleNowPlaying={() => setIsNowPlayingOpen(true)}
       />
       {showCreatePlaylist && (
         <CreatePlaylistModal
