@@ -994,6 +994,7 @@ const App = () => {
   });
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const audioRef = useRef(null);
+  const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
 
   // Persist liked songs
   useEffect(() => { localStorage.setItem('likedSongs', JSON.stringify(likedSongs)); }, [likedSongs]);
